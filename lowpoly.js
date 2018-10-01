@@ -1,11 +1,20 @@
 var drawing = document.getElementById("background");
 
-var light_position = [500, 500, 500];
+var light_z = 250;
+var light_position = [500, 500, light_z];
 var light_diffuse = [1.0, 1.0, 1.0, 1.0];
-var k_diffuse = 0.9;
-var material_diffuse = [0.5, 0.8, 1.0, 1.0];
+var k_diffuse = 1.0;
+var material_diffuse = [0.35, 0.55, 1.0, 1.0];
 
 C = [light_diffuse[0] * material_diffuse[0], light_diffuse[1] * material_diffuse[1], light_diffuse[2] * material_diffuse[2]];
+
+var specular = {
+	light_specular : [1.0, 1.0, 1.0, 1.0],
+	light_intensity : 1.0
+
+}
+
+var dynamic = false;
 
 // Define points
 var x = [];
@@ -15,43 +24,79 @@ var z = [];
 var triangles = [];
 var normals = [];
 var centers = [];
+var colors = [];
 
-ptNum = 100;
-row = 12;
-col = 6;
+screen_width = 1920;
+screen_height = 1080;
+
+max_z = 50;
+
+row = 8;
+col = 16;
 
 colorset = ['#bad7e9','#def3f8','#edf1f2','#98d5f2'];
 
+
+
 generatePoints(row, col);
+updateTriangles();
 
-if(drawing.getContext){
-	var context = drawing.getContext("2d");
-	for(var i=0;i<col-1;i++) {
-		for(var j=0;j<row-1;j++) {
-			addTriangle(x[i][j], y[i][j], z[i][j], x[i][j+1], y[i][j+1], z[i][j+1], x[i+1][j], y[i+1][j], z[i+1][j]);
-			addTriangle(x[i+1][j], y[i+1][j], z[i+1][j], x[i+1][j+1], y[i+1][j+1], z[i+1][j+1], x[i][j+1], y[i][j+1], z[i][j+1]);
-		}
-	}
-
+if(!dynamic) {
 	for(var i=0;i<triangles.length;i++) {
 		normals.push(CalcNormal(triangles[i]));
 		centers.push(CalcCenter(triangles[i]));
-		var I = CalcI(i);
-
-		DrawTriangle(context, triangles[i], convertColor(I*C[0], I*C[1], I*C[2]), 'fill');
+		colors.push(assignColor(centers[i]));
 	}
-	console.log(normals);
 }
 
-function redraw() {
-	for(var i=0;i<triangles.length;i++) {
-		var I = CalcI(i);
+if(drawing.getContext){
+	var context = drawing.getContext("2d");
+}
 
-		DrawTriangle(context, triangles[i], convertColor(I*C[0], I*C[1], I*C[2]), 'fill');
+function updateTriangles() {
+	triangles = [];
+	for(var i=0;i<row;i++) {
+		if(i%2 == 0) {
+			for(var j=0;j<col+1;j++) {
+				{
+					addTriangle(x[i][j], y[i][j], z[i][j], x[i][j+1], y[i][j+1], z[i][j+1], x[i+1][j+1], y[i+1][j+1], z[i+1][j+1]);
+					addTriangle(x[i][j], y[i][j], z[i][j], x[i+1][j], y[i+1][j], z[i+1][j], x[i+1][j+1], y[i+1][j+1], z[i+1][j+1]);
+				}
+			}
+		}
+		else {
+			for(var j=0;j<col+1;j++) {
+				{
+					addTriangle(x[i][j], y[i][j], z[i][j], x[i][j+1], y[i][j+1], z[i][j+1], x[i+1][j], y[i+1][j], z[i+1][j]);
+					addTriangle(x[i][j+1], y[i][j+1], z[i][j+1], x[i+1][j], y[i+1][j], z[i+1][j], x[i+1][j+1], y[i+1][j+1], z[i+1][j+1]);
+				}
+			}
+		}
+	}
+}
+
+function draw() {
+	if(dynamic) {
+		normals = [];
+		centers = [];
+		colors = [];
+	}
+	for(var i=0;i<triangles.length;i++) {
+		if(dynamic) {
+			normals.push(CalcNormal(triangles[i]));
+			centers.push(CalcCenter(triangles[i]));
+			colors.push(assignColor(centers[i]));
+		}
+		var I = CalcLight(i);
+		DrawTriangle(context, triangles[i], convertColor(I*colors[i][0], I*colors[i][1], I*colors[i][2]), 'fill');
 	}
 }
 
 function addTriangle(x1, y1, z1, x2, y2, z2, x3, y3, z3) {
+	triangles.push([x1, y1, z1, x2, y2, z2, x3, y3, z3]);
+}
+
+function modifyTriangle(i, x1, y1, z1, x2, y2, z2, x3, y3, z3) {
 	triangles.push([x1, y1, z1, x2, y2, z2, x3, y3, z3]);
 }
 
@@ -108,9 +153,21 @@ function VecLen(v) {
 	return Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
 }
 
-function CalcI(i) {
+function CalcLight(i) {
 	I = k_diffuse * (0.5 * CalcCos(i) + 0.5);
 	return I;
+}
+
+function CalcAmbient() {
+
+}
+
+function CalcDiffuse() {
+
+}
+
+function CalcSpecular() {
+
 }
 
 function CrossProduct(x1, y1, z1, x2, y2, z2) {
@@ -152,6 +209,23 @@ function randomColor() {
 	//return colorset[Math.round(Math.random() * 3)];
 }
 
+function assignColor(center) {
+	var z = center[2];
+	//var color = [material_diffuse[0]*z/max_z, material_diffuse[1]*z/max_z, material_diffuse[2]*z/max_z];
+	//var color = material_diffuse;
+	var color = CalcTopRadColor(center, [0.35, 0.55, 1.0], [0.65, 0.35, 1.0]);
+	return color;
+}
+
+function CalcTopRadColor(center, color1, color2) {
+	var x = center[0];
+	var r = color1[0] + (color2[0] - color1[0]) * x / screen_width;
+	var g = color1[1] + (color2[1] - color1[1]) * x / screen_width;
+	var b = color1[2] + (color2[2] - color1[2]) * x / screen_width;
+
+	return [r, g, b];
+}
+
 function convertColor(r, g, b) {
 	r = Math.round(r * 255).toString(16);
 	g = Math.round(g * 255).toString(16);
@@ -168,21 +242,58 @@ function convertColor(r, g, b) {
 }
 
 function generatePoints(row, col) {
-	for(var i=0;i<col;i++) {
+	// row + 1 for bottom edge points
+	for(var i=0;i<row+1;i++) {
 		var x_temp = [];
 		var y_temp = [];
 		var z_temp = [];
-		for(var j=0;j<row;j++) {
-			if(col % 2 == 0)
-				x_temp.push(Math.round(Math.random() * 100) - 50 + 1920 / row * j);
-			else
-				x_temp.push(Math.round(Math.random() * 100) - 50 + 1920 / row * j + 192);
-			y_temp.push(Math.round(Math.random() * 100) - 50 + 1080 / col * i);
-			z_temp.push(Math.round(Math.random() * 50));
+		for(var j=0;j<col+2;j++) {
+			var pt_x = screen_width / col * j;
+			var pt_y = screen_height / row * i;
+			var pt_z = Math.round(Math.random() * max_z);
+			
+			var x_odd_row_offset = screen_width / col / 2;
+
+			if(i % 2 != 0)
+				pt_x -= x_odd_row_offset;
+			
+			var x_random = Math.round(Math.random() * screen_width / col) - screen_width / col / 2;
+			var y_random = Math.round(Math.random() * screen_height / row) - screen_height / row / 2;
+
+			if(i != 0 && j != 0 && i != row && j != col+1) {
+				pt_x += x_random;
+				pt_y += y_random;
+			}
+
+			x_temp.push(pt_x);
+			y_temp.push(pt_y);
+			z_temp.push(pt_z);
 		}
 		x.push(x_temp);
 		y.push(y_temp);
 		z.push(z_temp);
+	}
+	console.log(x);
+}
+
+function movePoints() {
+	for(var i=0;i<row;i++) {
+		for(var j=0;j<col;j++) {
+			if(i != 0 && j != 0 && i != row && j != col+1) {
+				shift_x = Math.random() * 2 - 1;
+				shift_y = Math.random() * 2 - 1;
+				shift_z = Math.random() * 2 - 1;
+				/*
+				if(x[i][j] + shift_x > x[i][j+1] || x[i][j] + shift_x < x[i][j-1])
+					shift_x = -shift_x;
+				if(y[i][j] + shift_y > y[i-1][j] || y[i][j] + shift_y > y[i-1][j+1] || y[i][j] + shift_y < y[i+1][j] || y[i][j] + shift_y < y[i+1][j+1])
+					shift_y = -shift_y;
+				*/
+				x[i][j] += shift_x;
+				y[i][j] += shift_y;
+				z[i][j] += shift_z;
+			}
+		}
 	}
 }
 
@@ -191,7 +302,13 @@ function drawBackground() {
 }
 
 document.addEventListener('mousemove', function(e){
-	light_position = [e.pageX, e.pageY, 275];
-	redraw();
-	//info.textContent = sliderOnTouch;
+	light_position = [e.pageX, e.pageY, light_z];
 });
+
+setInterval("render()", 1000 / 24);
+
+function render() {
+	
+	draw();
+	//movePoints();
+}
