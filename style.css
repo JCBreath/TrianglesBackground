@@ -1,0 +1,99 @@
+html {
+	padding: 0px;
+	margin: 0px;
+}
+
+body {
+	font-family: 'Microsoft YaHei', sans-serif;
+	overflow: hidden;
+	margin: 0px;
+	user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+    -ms-user-select: none;
+}
+canvas {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	z-index: -1;
+}
+
+#control {
+	position: absolute;
+	height: 100%;
+	width: 400px;
+	background: transparent;
+	right: -380px;
+	z-index: 1;
+	opacity: 0;
+	transition: .5s;
+	align-items: center;
+	flex-direction: column;
+}
+
+#control:hover {
+	right: 0px;
+	opacity: 1;
+}
+			
+.heading {
+	display: block;
+	width: 300px;
+    height: 30px;
+    transition: .5s;
+    margin-top: 30px;
+    margin-bottom: -15px;
+    color: rgba(255, 255, 255, .8);
+    font-weight: lighter;
+}
+
+/* 
+	track
+	thumb
+*/
+			
+.light-slider {
+	display: block;
+    width: 300px;
+    height: 30px;
+    background: rgba(0, 0, 0, .6);
+    outline: none;
+    transition: .5s;
+    margin-top: 20px;
+    opacity: .5;
+}
+			
+.light-slider:hover {
+	/*border: solid 1px #ffffff;*/
+	color: #efefef;
+	opacity: 1;
+}
+			
+			
+.light-slider-bar {
+	width: 0px;
+  	height: 30px;
+  	background-color: rgba(255, 255, 255, .8);
+}
+
+.perc {
+	position: relative;
+	top: -25px;
+	right: -305px;
+	font-size: 15px;
+	font-weight: lighter;
+	text-align: left;
+}
+
+.desc {
+	position: relative;
+	top: -45px;
+	right: 20px;
+	width: 300px;
+	font-size: 15px;
+	font-weight: lighter;
+	text-align: left;
+	opacity: 1;
+	color: #ffffff;
+}

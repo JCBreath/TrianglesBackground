@@ -1,33 +1,40 @@
-var drawing = document.getElementById("background");
+var canvas = document.getElementById("background");
 
+var screen_width = window.screen.width;
+var screen_height = window.screen.height;
+
+canvas.width = screen_width;
+canvas.height = screen_height;
+
+var color1 = [0.35, 0.55, 1.0];
+var color2 = [0.65, 0.35, 1.0];
+
+
+// Light Settings
 var light_z = 250;
 var light_position = [500, 500, light_z];
 var light_diffuse = [1.0, 1.0, 1.0, 1.0];
 var k_diffuse = 1.0;
 var material_diffuse = [0.35, 0.55, 1.0, 1.0];
 
-C = [light_diffuse[0] * material_diffuse[0], light_diffuse[1] * material_diffuse[1], light_diffuse[2] * material_diffuse[2]];
-
 var specular = {
 	light_specular : [1.0, 1.0, 1.0, 1.0],
 	light_intensity : 1.0
-
 }
 
+// Dynamic Disabled
 var dynamic = false;
 
-// Define points
+// Define Points
 var x = [];
 var y = [];
 var z = [];
 
+// Define Triangles and their properties
 var triangles = [];
 var normals = [];
 var centers = [];
 var colors = [];
-
-screen_width = 1920;
-screen_height = 1080;
 
 max_z = 50;
 
@@ -49,8 +56,8 @@ if(!dynamic) {
 	}
 }
 
-if(drawing.getContext){
-	var context = drawing.getContext("2d");
+if(canvas.getContext){
+	var context = canvas.getContext("2d");
 }
 
 function updateTriangles() {
@@ -90,6 +97,12 @@ function draw() {
 		var I = CalcLight(i);
 		DrawTriangle(context, triangles[i], convertColor(I*colors[i][0], I*colors[i][1], I*colors[i][2]), 'fill');
 	}
+}
+
+function reassignColor() {
+	colors = [];
+	for(var i=0;i<triangles.length;i++)
+		colors.push(assignColor(centers[i]));
 }
 
 function addTriangle(x1, y1, z1, x2, y2, z2, x3, y3, z3) {
@@ -213,7 +226,7 @@ function assignColor(center) {
 	var z = center[2];
 	//var color = [material_diffuse[0]*z/max_z, material_diffuse[1]*z/max_z, material_diffuse[2]*z/max_z];
 	//var color = material_diffuse;
-	var color = CalcTopRadColor(center, [0.35, 0.55, 1.0], [0.65, 0.35, 1.0]);
+	var color = CalcTopRadColor(center, color1, color2);
 	return color;
 }
 
@@ -301,11 +314,7 @@ function drawBackground() {
 
 }
 
-document.addEventListener('mousemove', function(e){
-	light_position = [e.pageX, e.pageY, light_z];
-});
-
-setInterval("render()", 1000 / 24);
+setInterval("render()", 1000 / 60);
 
 function render() {
 	

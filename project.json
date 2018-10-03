@@ -1,0 +1,24 @@
+{
+	"contentrating" : "Everyone",
+	"description" : "计算机图形课的小项目\r\nIt's a computer graphics course project.\r\n\r\n鼠标跟踪光源\r\nReal-time rendered triangles with light source at the cursor.\r\n\r\nThe triangles are generated randomly.\r\n\r\nResolution    1920x1080\r\nFramerate    24 fps\r\nCPU usage   2%~3% on i7-4790k\r\n\r\n* 交互菜单尚未做完\r\n* Interactive menu is under development\r\n\r\nSee JavaScript code at my Github - github.com/JCBreath/WebLowPolyRendering\r\n\r\nEnjoy.",
+	"file" : "demo.html",
+	"general" : 
+	{
+		"properties" : 
+		{
+			"schemecolor" : 
+			{
+				"order" : 0,
+				"text" : "ui_browse_properties_scheme_color",
+				"type" : "color",
+				"value" : "0 0 0"
+			}
+		}
+	},
+	"preview" : "preview.jpg",
+	"tags" : [ "Abstract" ],
+	"title" : "TrianglesBackground - 三角壁纸",
+	"type" : "web",
+	"visibility" : "public",
+	"workshopid" : "1527667272"
+}
