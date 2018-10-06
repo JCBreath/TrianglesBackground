@@ -9,6 +9,12 @@ canvas.height = screen_height;
 var color1 = [0.35, 0.55, 1.0];
 var color2 = [0.65, 0.35, 1.0];
 
+console.log(document.cookie);
+
+if(localStorage.getItem("settings"))
+	loadsettings();
+else
+	var autosave_timer = setInterval("autosave()", 1000);
 
 // Light Settings
 var light_z = 250;
@@ -24,6 +30,9 @@ var specular = {
 
 // Dynamic Disabled
 var dynamic = false;
+
+var framerate = 24;
+var maxfps = 60;
 
 // Define Points
 var x = [];
@@ -314,10 +323,27 @@ function drawBackground() {
 
 }
 
-setInterval("render()", 1000 / 60);
+var timer = setInterval("render()", 1000 / framerate);
 
 function render() {
-	
 	draw();
 	//movePoints();
+}
+
+function loadsettings() {
+	var settings = JSON.parse(localStorage.getItem("settings"));
+	color1 = JSON.parse(settings.color1);
+	color2 = JSON.parse(settings.color2);
+	var autosave_timer = setInterval("autosave()", 1000);
+}
+
+function autosave() {
+	var settings = {};
+	settings.color1 = JSON.stringify(color1);
+	settings.color2 = JSON.stringify(color2);
+	document.cookie = "";
+	var d= new Date();
+	d.setHours(d.getHours() + (24 * 30));
+	localStorage.setItem("settings", JSON.stringify(settings));
+	console.log(localStorage.getItem("settings"));
 }

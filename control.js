@@ -39,6 +39,9 @@ function addSlider(id, type, description) {
 		slider_bar.style.width = Math.round(color2[2] * 300) + "px";
 	} else if(id == "F") {
 		
+	} else if(id == "FR") {
+		brtperc.textContent = Math.round(framerate) + " FPS";
+		slider_bar.style.width = Math.round(framerate / maxfps * 300) + "px";
 	}
 
 	var desc = document.createElement('div');
@@ -81,25 +84,36 @@ document.addEventListener('mousemove', function(e){
 		if(slider_bar_width < 0)
 			slider_bar_width = 0;
 		slider_bar.style.width = slider_bar_width + 'px';
-		brtperc.textContent = Math.round(slider_bar_width / 3) + "%";
 		if(sliderOnTouch == "C1R") {
 			color1[0] = slider_bar_width / 300;
+			brtperc.textContent = Math.round(slider_bar_width / 3) + "%";
 			reassignColor();
 		} else if(sliderOnTouch == "C1G") {
 			color1[1] = slider_bar_width / 300;
+			brtperc.textContent = Math.round(slider_bar_width / 3) + "%";
 			reassignColor();
 		} else if(sliderOnTouch == "C1B") {
 			color1[2] = slider_bar_width / 300;
+			brtperc.textContent = Math.round(slider_bar_width / 3) + "%";
 			reassignColor();
 		} else if(sliderOnTouch == "C2R") {
 			color2[0] = slider_bar_width / 300;
+			brtperc.textContent = Math.round(slider_bar_width / 3) + "%";
 			reassignColor();
 		} else if(sliderOnTouch == "C2G") {
 			color2[1] = slider_bar_width / 300;
+			brtperc.textContent = Math.round(slider_bar_width / 3) + "%";
 			reassignColor();
 		} else if(sliderOnTouch == "C2B") {
 			color2[2] = slider_bar_width / 300;
+			brtperc.textContent = Math.round(slider_bar_width / 3) + "%";
 			reassignColor();
+		} else if(sliderOnTouch == "FR") {
+			framerate = slider_bar_width / 300 * maxfps;
+			clearInterval(timer);
+			if(framerate != 0)
+				timer = setInterval("render()", 1000 / framerate);
+			brtperc.textContent = Math.round(slider_bar_width / 300 * maxfps) + " FPS";
 		}
 	}
 });
@@ -123,4 +137,8 @@ addSlider("F", "FLT", "");
 
 addHeading("Light Source Height");
 addSlider("LH", "LH", "");
+
 */
+
+addHeading("Frame Rate");
+addSlider("FR", "FR", "");
