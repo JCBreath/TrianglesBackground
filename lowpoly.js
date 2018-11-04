@@ -9,24 +9,17 @@ canvas.height = screen_height;
 var color1 = [0.35, 0.55, 1.0];
 var color2 = [0.65, 0.35, 1.0];
 
-console.log(document.cookie);
-
-if(localStorage.getItem("settings"))
-	loadsettings();
-else
-	var autosave_timer = setInterval("autosave()", 1000);
-
 // Light Settings
-var light_z = 250;
+var light_z = 150;
 var light_position = [500, 500, light_z];
 var light_diffuse = [1.0, 1.0, 1.0, 1.0];
 var k_diffuse = 1.0;
 var material_diffuse = [0.35, 0.55, 1.0, 1.0];
-
 var specular = {
 	light_specular : [1.0, 1.0, 1.0, 1.0],
 	light_intensity : 1.0
 }
+var light_attenuation = 0.618;
 
 // Dynamic Disabled
 var dynamic = false;
@@ -40,19 +33,23 @@ var y = [];
 var z = [];
 
 // Define Triangles and their properties
+var tri_json = [];
 var triangles = [];
 var normals = [];
 var centers = [];
 var colors = [];
 
-max_z = 50;
+var max_z = 50;
 
-row = 8;
-col = 16;
+var row = 8;
+var col = 16;
 
 colorset = ['#bad7e9','#def3f8','#edf1f2','#98d5f2'];
 
-
+if(localStorage.getItem("settings"))
+	loadsettings();
+else
+	var autosave_timer = setInterval("autosave()", 1000);
 
 generatePoints(row, col);
 updateTriangles();
@@ -62,11 +59,20 @@ if(!dynamic) {
 		normals.push(CalcNormal(triangles[i]));
 		centers.push(CalcCenter(triangles[i]));
 		colors.push(assignColor(centers[i]));
+		tri_json.push({id:i,z_index:CalcCenter(triangles[i])[2]});
 	}
+	//console.log(tri_json);
+	tri_json.sort(function (a, b) {
+		return a.z_index - b.z_index;
+	});
+	//console.log(tri_json);
+	//console.log(Object.keys(tri_json).sort());
+	
 }
 
 if(canvas.getContext){
 	var context = canvas.getContext("2d");
+	//context.translate(0,-50);
 }
 
 function updateTriangles() {
@@ -97,6 +103,7 @@ function draw() {
 		centers = [];
 		colors = [];
 	}
+	/*
 	for(var i=0;i<triangles.length;i++) {
 		if(dynamic) {
 			normals.push(CalcNormal(triangles[i]));
@@ -104,7 +111,23 @@ function draw() {
 			colors.push(assignColor(centers[i]));
 		}
 		var I = CalcLight(i);
-		DrawTriangle(context, triangles[i], convertColor(I*colors[i][0], I*colors[i][1], I*colors[i][2]), 'fill');
+		var r = I*colors[i][0];
+		var g = I*colors[i][1];
+		var b = I*colors[i][2];
+
+		DrawTriangle(context, triangles[i], convertColor(r, g, b), 'fill');
+	}
+	*/
+
+	// Switched to sorted rendering
+	for(var i=0;i<triangles.length;i++) {
+		var tri_index = tri_json[i].id;
+		var I = CalcLight(tri_index);
+		var r = I*colors[tri_index][0];
+		var g = I*colors[tri_index][1];
+		var b = I*colors[tri_index][2];
+
+		DrawTriangle(context, triangles[tri_index], convertColor(r, g, b), 'fill');
 	}
 }
 
@@ -122,14 +145,15 @@ function modifyTriangle(i, x1, y1, z1, x2, y2, z2, x3, y3, z3) {
 	triangles.push([x1, y1, z1, x2, y2, z2, x3, y3, z3]);
 }
 
+// Canvas draw function
 function DrawTriangle(context, triangle, color, type) {
     context.beginPath();
-    context.moveTo(triangle[0], triangle[1]);
-    context.lineTo(triangle[3], triangle[4]);
-    context.lineTo(triangle[6], triangle[7]);
-    context.strokeStyle = color;
+    context.moveTo(triangle[0], triangle[1]); // set start pt (2D)
+    context.lineTo(triangle[3], triangle[4]); // draw a line to
+    context.lineTo(triangle[6], triangle[7]); // continue drawing
+    context.strokeStyle = color; // outline color
     context.stroke();
-    context[type + 'Style'] = color;
+    context[type + 'Style'] = color; // fill color
     context.closePath();
     context[type]();
 }
@@ -176,7 +200,17 @@ function VecLen(v) {
 }
 
 function CalcLight(i) {
-	I = k_diffuse * (0.5 * CalcCos(i) + 0.5);
+	var c = centers[i];
+	var d_x = light_position[0] - c[0];
+	var d_y = light_position[1] - c[1];
+	var d_z = light_position[2] - c[2];
+	var light_src_dist = Math.sqrt(d_x*d_x+d_y*d_y+d_y*d_y);
+	//console.log(light_src_dist);
+	var dist_factor = (screen_width * 0.618) / light_src_dist;
+	
+	if(dist_factor > 1)
+		dist_factor = 1;
+	var I = k_diffuse * (0.5 * CalcCos(i) + 0.5) * dist_factor;
 	return I;
 }
 
@@ -207,11 +241,11 @@ function CrossProduct(x1, y1, z1, x2, y2, z2) {
 }
 
 function CalcCenter(t) {
-	var c1 = (t[0] + t[3] + t[6]) / 3;
-	var c2 = (t[1] + t[4] + t[7]) / 3;
-	var c3 = (t[2] + t[5] + t[8]) / 3;
+	var c_x = (t[0] + t[3] + t[6]) / 3;
+	var c_y = (t[1] + t[4] + t[7]) / 3;
+	var c_z = (t[2] + t[5] + t[8]) / 3;
 	
-	return [c1, c2, c3];
+	return [c_x, c_y, c_z];
 }
 
 function randomColor() {
@@ -285,8 +319,12 @@ function generatePoints(row, col) {
 			if(i != 0 && j != 0 && i != row && j != col+1) {
 				pt_x += x_random;
 				pt_y += y_random;
+			} else if((i == 0 || i == row) && j != 0 && j != col+1) {
+				pt_x += x_random;
+			} else if((j == 0 || j == col+1) && i != 0 && i != row) {
+				pt_y += y_random;
 			}
-
+			
 			x_temp.push(pt_x);
 			y_temp.push(pt_y);
 			z_temp.push(pt_z);
@@ -332,8 +370,17 @@ function render() {
 
 function loadsettings() {
 	var settings = JSON.parse(localStorage.getItem("settings"));
-	color1 = JSON.parse(settings.color1);
-	color2 = JSON.parse(settings.color2);
+	// if not saved, use default
+	if(settings.color1)
+		color1 = JSON.parse(settings.color1);
+	if(settings.color2)
+		color2 = JSON.parse(settings.color2);
+	if(settings.framerate)
+		framerate = settings.framerate;
+	if(settings.light_z) {
+		light_z = settings.light_z;
+		light_position = [500, 500, light_z];
+	}
 	var autosave_timer = setInterval("autosave()", 1000);
 }
 
@@ -341,9 +388,8 @@ function autosave() {
 	var settings = {};
 	settings.color1 = JSON.stringify(color1);
 	settings.color2 = JSON.stringify(color2);
-	document.cookie = "";
-	var d= new Date();
-	d.setHours(d.getHours() + (24 * 30));
+	settings.framerate = framerate;
+	settings.light_z = light_z;
 	localStorage.setItem("settings", JSON.stringify(settings));
 	console.log(localStorage.getItem("settings"));
 }

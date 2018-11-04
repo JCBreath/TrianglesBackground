@@ -37,8 +37,9 @@ function addSlider(id, type, description) {
 	} else if(id == "C2B") {
 		brtperc.textContent = Math.round(color2[2] * 100) + "%";
 		slider_bar.style.width = Math.round(color2[2] * 300) + "px";
-	} else if(id == "F") {
-		
+	} else if(id == "LH") {
+		brtperc.textContent = Math.round(light_z - max_z) + " px";
+		slider_bar.style.width = Math.round((light_z - max_z) / 500 * 300) + "px";
 	} else if(id == "FR") {
 		brtperc.textContent = Math.round(framerate) + " FPS";
 		slider_bar.style.width = Math.round(framerate / maxfps * 300) + "px";
@@ -108,6 +109,10 @@ document.addEventListener('mousemove', function(e){
 			color2[2] = slider_bar_width / 300;
 			brtperc.textContent = Math.round(slider_bar_width / 3) + "%";
 			reassignColor();
+		} else if(sliderOnTouch == "LH") {
+			light_z = slider_bar_width / 300 * 500 + max_z;
+			light_position = [mouseX, mouseY, light_z];
+			brtperc.textContent = Math.round(light_z - max_z) + " px";
 		} else if(sliderOnTouch == "FR") {
 			framerate = slider_bar_width / 300 * maxfps;
 			clearInterval(timer);
@@ -134,11 +139,15 @@ addSlider("C2B", "C2", "B");
 /*
 addHeading("Flatness");
 addSlider("F", "FLT", "");
-
+*/
 addHeading("Light Source Height");
 addSlider("LH", "LH", "");
 
-*/
-
 addHeading("Frame Rate");
 addSlider("FR", "FR", "");
+/*
+addHeading("Number of Triangles");
+addSlider("RN", "RN", "");
+addSlider("CN", "CN", "");
+*/
+//addHeading("Last Updated 11/04");
